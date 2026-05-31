@@ -84,7 +84,7 @@ st.markdown(f"""
 </style>
 """, unsafe_allow_html=True)
 
-# ── Session state ─────────────────────────────────────────────────────────────
+# ── Session state ───────────────────────────────────────────────────────────
 MODES = {"Focus": 25 * 60, "Short Break": 5 * 60, "Long Break": 15 * 60}
 
 if "mode"         not in st.session_state: st.session_state.mode         = "Focus"
@@ -94,6 +94,10 @@ if "last_tick"    not in st.session_state: st.session_state.last_tick    = None
 if "tasks"        not in st.session_state: st.session_state.tasks        = []
 if "pomodoros"    not in st.session_state: st.session_state.pomodoros    = 0
 if "task_input"   not in st.session_state: st.session_state.task_input   = ""
+
+# ── Auto-refresh (only while running, no sleep) ───────────────────────────────
+if st.session_state.running:
+    st.rerun()
 
 # ── Tick (only when running) ──────────────────────────────────────────────────
 if st.session_state.running:
@@ -112,7 +116,7 @@ if st.session_state.running:
 st.markdown("<h1 style='text-align:center;margin-bottom:0;'>Focus Flow</h1>", unsafe_allow_html=True)
 st.markdown("<p style='text-align:center;opacity:0.5;font-size:0.85rem;letter-spacing:0.15em;text-transform:uppercase;margin-bottom:1.5rem;'>Pomodoro Timer</p>", unsafe_allow_html=True)
 
-# ── Mode buttons ──────────────────────────────────────────────────────────────
+# ── Mode buttons ────────────────────────────────────────────────────────────
 c1, c2, c3 = st.columns(3)
 for col, label in zip([c1, c2, c3], MODES):
     with col:
@@ -123,7 +127,7 @@ for col, label in zip([c1, c2, c3], MODES):
             st.session_state.last_tick    = None
             st.rerun()
 
-# ── Timer display ─────────────────────────────────────────────────────────────
+# ── Timer display ───────────────────────────────────────────────────────────
 total    = MODES[st.session_state.mode]
 secs     = st.session_state.seconds_left
 mins, s  = divmod(secs, 60)
@@ -139,7 +143,7 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# ── Controls ──────────────────────────────────────────────────────────────────
+# ── Controls ────────────────────────────────────────────────────────────────
 b1, b2, b3 = st.columns([1, 1, 1])
 with b1:
     if st.button("⏸ Pause" if st.session_state.running else "▶ Start", use_container_width=True):
@@ -155,13 +159,9 @@ with b2:
 with b3:
     st.markdown(f"<p style='text-align:center;padding-top:0.6rem;opacity:0.7;'>🍅 × {st.session_state.pomodoros}</p>", unsafe_allow_html=True)
 
-# ── Auto-refresh (only while running, no sleep) ───────────────────────────────
-if st.session_state.running:
-    st.rerun()
-
 st.markdown("<br>", unsafe_allow_html=True)
 
-# ── Task list ─────────────────────────────────────────────────────────────────
+# ── Task list ────────────────────────────────────────────────────────────────
 st.markdown("<h3 style='margin-bottom:0.75rem;'>📋 Tasks</h3>", unsafe_allow_html=True)
 
 # Use a form so the input only submits on Enter/button click, not every keystroke
