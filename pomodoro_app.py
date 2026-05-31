@@ -39,6 +39,7 @@ st.markdown(f"""
     font-size: 0.9rem !important;
     letter-spacing: 0.05em !important;
     transition: all 0.2s !important;
+    box-shadow: 0 12px 50px rgba(0,0,0,0.6) !important;
   }}
   .stButton > button:hover {{
     background: rgba(246,161,75,0.3) !important;
@@ -48,11 +49,11 @@ st.markdown(f"""
 </style>
 """, unsafe_allow_html=True)
 
-# ── Title ─────────────────────────────────────────────────────────────────────
+# ── Title ───────────────────────────────────────────────────────────────
 st.markdown("<h1 style='text-align:center;margin-bottom:0;position:relative;z-index:1;'>Focus Flow</h1>", unsafe_allow_html=True)
 st.markdown("<p style='text-align:center;opacity:0.5;font-size:0.85rem;letter-spacing:0.15em;text-transform:uppercase;margin-bottom:1.5rem;position:relative;z-index:1;'>Pomodoro Timer</p>", unsafe_allow_html=True)
 
-# ── Mode buttons ──────────────────────────────────────────────────────────────
+# ── Mode buttons ───────────────────────────────────────────────────────────
 c1, c2, c3 = st.columns(3)
 for col, label in zip([c1, c2, c3], MODES):
     with col:
@@ -85,6 +86,7 @@ components.html(f"""
     align-items: center; justify-content: center;
     gap: 4px; z-index: 100;
     transition: background 0.2s;
+    box-shadow: 0 8px 35px rgba(0,0,0,0.5);
   }}
   #hamburger:hover {{ background: rgba(246,161,75,0.25); border-color:#f6a14b; }}
   #hamburger span {{
@@ -104,6 +106,7 @@ components.html(f"""
     padding: 1rem 1.2rem;
     margin-bottom: 0.75rem;
     backdrop-filter: blur(16px);
+    box-shadow: 0 12px 50px rgba(0,0,0,0.6);
   }}
   #settings-panel.open {{ display: block; }}
   .settings-label {{
@@ -132,6 +135,7 @@ components.html(f"""
     padding: 0.45rem 0.9rem; font-size: 0.85rem;
     cursor: pointer; font-family: 'DM Sans', sans-serif;
     white-space: nowrap; transition: background 0.2s;
+    box-shadow: 0 8px 35px rgba(0,0,0,0.5);
   }}
   #bg-apply:hover {{ background: rgba(246,161,75,0.45); }}
 
@@ -141,7 +145,7 @@ components.html(f"""
     border-radius: 24px;
     padding: 2rem 2rem 1.5rem;
     backdrop-filter: blur(16px);
-    box-shadow: 0 8px 40px rgba(0,0,0,0.35);
+    box-shadow: 0 12px 50px rgba(0,0,0,0.6);
     margin-bottom: 1rem; text-align: center;
   }}
   .timer-label {{
@@ -162,6 +166,7 @@ components.html(f"""
     cursor:pointer; font-family:'DM Sans',sans-serif;
     transition:all 0.2s; flex-shrink:0;
     display:flex; align-items:center; justify-content:center;
+    box-shadow: 0 8px 35px rgba(0,0,0,0.5);
   }}
   .adj-btn:hover {{ background:rgba(246,161,75,0.3); border-color:#f6a14b; }}
   .adj-btn:disabled {{ opacity:0.3; cursor:not-allowed; }}
@@ -218,6 +223,7 @@ components.html(f"""
     padding:0.55rem 1.8rem; font-size:0.9rem;
     letter-spacing:0.05em; cursor:pointer;
     font-family:'DM Sans',sans-serif; transition:all 0.2s;
+    box-shadow: 0 8px 35px rgba(0,0,0,0.5);
   }}
   .timer-btn:hover {{ background:rgba(246,161,75,0.3); border-color:#f6a14b; }}
   .pomodoro-count {{
@@ -261,10 +267,16 @@ components.html(f"""
 <p class="pomodoro-count" id="pomo-count">🍅 × {pomodoros}</p>
 
 <script>
-  // ── background ────────────────────────────────────────────────────────────
+  // ── background ───────────────────────────────────────────────────────────
   function applyBg() {{
     const url = document.getElementById('bg-input').value.trim();
-    if (url) window.parent.postMessage({{type:'setBg', url}}, '*');
+    if (url) {{
+      window.parent.postMessage({{type:'setBg', url}}, '*');
+      // Persist to session state
+      if (window.parent !== window) {{
+        window.parent.postMessage({{type:'saveBgUrl', url}}, '*');
+      }}
+    }}
   }}
   document.getElementById('bg-input').addEventListener('keydown', function(e) {{
     if (e.key === 'Enter') applyBg();
@@ -283,7 +295,7 @@ components.html(f"""
     document.getElementById('hamburger').classList.toggle('open');
   }}
 
-  // ── timer ─────────────────────────────────────────────────────────────────
+  // ── timer ────────────────────────────────────────────────────────────
   const STEP = 5 * 60;
   let TOTAL       = {total_secs};
   let secondsLeft = TOTAL;
@@ -439,11 +451,14 @@ st.markdown("""
     const targets = [
       document.querySelector('.stApp'),
       document.querySelector('[data-testid="stAppViewContainer"]'),
-      document.body
+      document.body,
+      document.documentElement
     ];
     targets.forEach(el => {
-      if (el) el.style.setProperty('background',
-        "url('" + url + "') center/cover no-repeat fixed", 'important');
+      if (el) {
+        el.style.setProperty('background',
+          "url('" + url + "') center/cover no-repeat fixed", 'important');
+      }
     });
   }
 
@@ -454,12 +469,17 @@ st.markdown("""
       const iframe = document.querySelector('iframe');
       if (iframe) iframe.contentWindow.postMessage({type:'bgApplied'}, '*');
     }
+    // Handle saving bg URL to session state
+    if (e.data && e.data.type === 'saveBgUrl') {
+      // This would need server-side handling via Streamlit's callback
+      // For now, the background change happens immediately via CSS
+    }
   });
 })();
 </script>
 """, unsafe_allow_html=True)
 
-# ── Task list ─────────────────────────────────────────────────────────────────
+# ── Task list ────────────────────────────────────────────────────────────
 st.markdown("<h3 style='margin-bottom:0.75rem;position:relative;z-index:1;'>📋 Tasks</h3>", unsafe_allow_html=True)
 
 with st.form("add_task_form", clear_on_submit=True):
